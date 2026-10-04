@@ -83,6 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btnImportData: document.getElementById('btn-import-data'),
     fileInputImport: document.getElementById('file-input-import'),
 
+    // Calculadora Flotante
+    btnOpenCalc: document.getElementById('btn-open-calc'),
+    modalCalc: document.getElementById('modal-calc'),
+    btnCloseCalc: document.getElementById('btn-close-calc'),
+    calcHistory: document.getElementById('calc-history'),
+    calcResult: document.getElementById('calc-result'),
+    btnCalcPaste: document.getElementById('btn-calc-paste'),
+    calcBtns: document.querySelectorAll('.calc-btn'),
+
     // Toast
     toast: document.getElementById('toast-msg')
   };
@@ -697,6 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('click', (e) => {
     if (e.target === elements.modalEdit) closeEditModal();
     if (e.target === elements.modalPerson) closePersonModal();
+    if (e.target === elements.modalCalc) closeCalcModal();
   });
 
   // ==========================================================
@@ -818,6 +828,217 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => console.log('ServiceWorker registrado correctamente'))
       .catch(err => console.log('Error registrando ServiceWorker:', err));
   }
+
+  // ==========================================================
+  // CALCULADORA FLOTANTE
+  // ==========================================================
+  const calcState = {
+    current: '0',
+    prev: null,
+    op: null,
+    resetNext: false
+  };
+
+  function updateCalcDisplay() {
+    if (elements.calcResult) {
+      elements.calcResult.textContent = calcState.current;
+    }
+    if (elements.calcHistory) {
+      if (calcState.prev !== null && calcState.op) {
+        const opSymbol = calcState.op === '*' ? '×' : (calcState.op === '/' ? '÷' : calcState.op);
+        elements.calcHistory.textContent = `${calcState.prev} ${opSymbol}`;
+      } else {
+        elements.calcHistory.textContent = '';
+      }
+    }
+  }
+
+  function calcInputDigit(digit) {
+    if (calcState.resetNext) {
+      calcState.current = digit === '.' ? '0.' : digit;
+      calcState.resetNext = false;
+    } else {
+      if (digit === '.') {
+        if (!calcState.current.includes('.')) {
+          calcState.current += '.';
+        }
+      } else {
+        if (calcState.current === '0') {
+          calcState.current = digit;
+        } else {
+          calcState.current += digit;
+        }
+      }
+    }
+    vibrate(12);
+    playTone(550, 0.04);
+    updateCalcDisplay();
+  }
+
+  function calcPerformOp() {
+    if (calcState.prev === null || calcState.op === null) return;
+    const a = parseFloat(calcState.prev);
+    const b = parseFloat(calcState.current);
+    if (isNaN(a) || isNaN(b)) return;
+
+    let res = 0;
+    if (calcState.op === '+') res = a + b;
+    else if (calcState.op === '-') res = a - b;
+    else if (calcState.op === '*') res = a * b;
+    else if (calcState.op === '/') res = b !== 0 ? (a / b) : 0;
+
+    // Redondear a 4 decimales si tiene decimales largos para evitar 0.30000000004
+    res = Math.round(res * 10000) / 10000;
+    calcState.current = String(res);
+    calcState.prev = null;
+    calcState.op = null;
+    calcState.resetNext = true;
+  }
+
+  function calcSetOperator(op) {
+    if (calcState.op && !calcState.resetNext) {
+      calcPerformOp();
+    }
+    calcState.prev = calcState.current;
+    calcState.op = op;
+    calcState.resetNext = true;
+    vibrate(15);
+    playTone(620, 0.05);
+    updateCalcDisplay();
+  }
+
+  function calcEquals() {
+    if (!calcState.op) return;
+    calcPerformOp();
+    vibrate(20);
+    playTone(720, 0.07);
+    updateCalcDisplay();
+  }
+
+  function calcClear() {
+    calcState.current = '0';
+    calcState.prev = null;
+    calcState.op = null;
+    calcState.resetNext = false;
+    vibrate(25);
+    playTone(380, 0.06);
+    updateCalcDisplay();
+  }
+
+  function calcBackspace() {
+    if (calcState.resetNext) return;
+    if (calcState.current.length > 1) {
+      calcState.current = calcState.current.slice(0, -1);
+    } else {
+      calcState.current = '0';
+    }
+    vibrate(12);
+    updateCalcDisplay();
+  }
+
+  function calcToggleSign() {
+    if (calcState.current !== '0') {
+      if (calcState.current.startsWith('-')) {
+        calcState.current = calcState.current.slice(1);
+      } else {
+        calcState.current = '-' + calcState.current;
+      }
+      updateCalcDisplay();
+    }
+  }
+
+  function openCalcModal() {
+    if (elements.modalCalc) elements.modalCalc.classList.add('open');
+    updateCalcDisplay();
+    vibrate(20);
+  }
+
+  function closeCalcModal() {
+    if (elements.modalCalc) elements.modalCalc.classList.remove('open');
+  }
+
+  if (elements.btnOpenCalc) elements.btnOpenCalc.addEventListener('click', openCalcModal);
+  if (elements.btnCloseCalc) elements.btnCloseCalc.addEventListener('click', closeCalcModal);
+
+  // Botón "Copiar al Valor del Apunte (€)"
+  if (elements.btnCalcPaste) {
+    elements.btnCalcPaste.addEventListener('click', () => {
+      // Si todavía hay operación pendiente, calcularla primero
+      if (calcState.op) {
+        calcPerformOp();
+        updateCalcDisplay();
+      }
+
+      const val = parseFloat(calcState.current);
+      if (!isNaN(val) && val > 0) {
+        // Si el modal de edición está abierto, copiar en el modal de edición
+        if (state.editingLoanId && elements.editInputAmount) {
+          elements.editInputAmount.value = val.toFixed(2);
+        } else if (elements.inputAmount) {
+          // Si no, copiar en el formulario principal
+          elements.inputAmount.value = val.toFixed(2);
+          // Si estamos en otra pestaña, cambiar a pestaña diario
+          if (state.activeTab !== 'diario') {
+            const tabDiarioBtn = document.querySelector('.nav-tab[data-tab="diario"]');
+            if (tabDiarioBtn) tabDiarioBtn.click();
+          }
+        }
+
+        playSuccessSound();
+        vibrate(35);
+        showToast(`💰 Valor copiado: ${val.toFixed(2)} €`);
+        closeCalcModal();
+      } else {
+        showToast('⚠️ El resultado debe ser un número mayor a 0');
+      }
+    });
+  }
+
+  // Eventos de botones de la calculadora
+  elements.calcBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const num = btn.getAttribute('data-num');
+      const op = btn.getAttribute('data-op');
+      const action = btn.getAttribute('data-action');
+
+      if (num !== null) {
+        calcInputDigit(num);
+      } else if (op) {
+        calcSetOperator(op);
+      } else if (action === 'clear') {
+        calcClear();
+      } else if (action === 'backspace') {
+        calcBackspace();
+      } else if (action === 'sign') {
+        calcToggleSign();
+      } else if (action === 'equals') {
+        calcEquals();
+      }
+    });
+  });
+
+  // Soporte de teclado para la calculadora cuando el modal está abierto
+  window.addEventListener('keydown', (e) => {
+    if (!elements.modalCalc || !elements.modalCalc.classList.contains('open')) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      calcInputDigit(e.key);
+    } else if (e.key === '.' || e.key === ',') {
+      calcInputDigit('.');
+    } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+      calcSetOperator(e.key);
+    } else if (e.key === 'Enter' || e.key === '=') {
+      e.preventDefault();
+      calcEquals();
+    } else if (e.key === 'Backspace') {
+      calcBackspace();
+    } else if (e.key === 'Escape') {
+      closeCalcModal();
+    } else if (e.key === 'c' || e.key === 'C') {
+      calcClear();
+    }
+  });
 
   // Escapar HTML auxiliar
   function escapeHtml(text) {

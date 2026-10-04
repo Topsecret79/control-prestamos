@@ -714,6 +714,159 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ==========================================================
+   BOTÓN FLOTANTE DE CALCULADORA (FAB)
+   ========================================================== */
+.calc-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(75px + var(--safe-bottom));
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0b0f19;
+  border: 2px solid rgba(254, 243, 199, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45), 0 2px 8px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.55rem;
+  cursor: pointer;
+  z-index: 800;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.calc-fab:hover {
+  transform: scale(1.08);
+}
+
+.calc-fab:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================
+   WIDGET CALCULADORA FLOTANTE
+   ========================================================== */
+.calc-box {
+  background: #111827;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 340px;
+  width: 100%;
+  padding: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: zoomIn 0.2s ease;
+}
+
+.calc-screen {
+  background: #0a0e1a;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 72px;
+  word-break: break-all;
+}
+
+.calc-history {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-height: 18px;
+  font-weight: 600;
+}
+
+.calc-result {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 1.15rem;
+  font-weight: 700;
+  height: 48px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.calc-btn:active {
+  transform: scale(0.92);
+  background: var(--bg-elevated);
+}
+
+.calc-btn.op {
+  background: #1e293b;
+  color: var(--sky);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.calc-btn.op:active {
+  background: #334155;
+}
+
+.calc-btn.clear {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.calc-btn.equals {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #0b0f19;
+  font-weight: 900;
+  font-size: 1.35rem;
+  border: none;
+}
+
+.calc-btn.equals:active {
+  background: #059669;
+}
+
+.calc-btn-paste {
+  grid-column: span 4;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0b0f19;
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 800;
+  height: 44px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.calc-btn-paste:active {
+  transform: scale(0.96);
+}
+
+
 </style>
 </head>
 <body>
@@ -1031,6 +1184,58 @@ body {
         <span>📲</span>
         <span>Enviar cuenta individual por WhatsApp</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Botón Flotante de Calculadora (FAB) -->
+  <button id="btn-open-calc" class="calc-fab" title="Abrir Calculadora Flotante" aria-label="Abrir Calculadora">🧮</button>
+
+  <!-- ==========================================
+       MODAL: CALCULADORA FLOTANTE
+       ========================================== -->
+  <div id="modal-calc" class="modal-backdrop">
+    <div class="calc-box">
+      <div class="modal-header">
+        <h3 class="modal-title">🧮 Calculadora Rápida</h3>
+        <button id="btn-close-calc" class="btn-close-modal">✕</button>
+      </div>
+
+      <div class="calc-screen">
+        <div id="calc-history" class="calc-history"></div>
+        <div id="calc-result" class="calc-result">0</div>
+      </div>
+
+      <div class="calc-grid">
+        <button class="calc-btn clear" data-action="clear">C</button>
+        <button class="calc-btn" data-action="backspace">⌫</button>
+        <button class="calc-btn op" data-op="/">÷</button>
+        <button class="calc-btn op" data-op="*">×</button>
+
+        <button class="calc-btn" data-num="7">7</button>
+        <button class="calc-btn" data-num="8">8</button>
+        <button class="calc-btn" data-num="9">9</button>
+        <button class="calc-btn op" data-op="-">−</button>
+
+        <button class="calc-btn" data-num="4">4</button>
+        <button class="calc-btn" data-num="5">5</button>
+        <button class="calc-btn" data-num="6">6</button>
+        <button class="calc-btn op" data-op="+">+</button>
+
+        <button class="calc-btn" data-num="1">1</button>
+        <button class="calc-btn" data-num="2">2</button>
+        <button class="calc-btn" data-num="3">3</button>
+        <button class="calc-btn equals" data-action="equals">=</button>
+
+        <button class="calc-btn" data-action="sign">±</button>
+        <button class="calc-btn" data-num="0">0</button>
+        <button class="calc-btn" data-num=".">.</button>
+        <button class="calc-btn equals" data-action="equals" style="font-size: 1.1rem;">=</button>
+
+        <button id="btn-calc-paste" class="calc-btn-paste">
+          <span>📥</span>
+          <span>Copiar al Valor del Apunte (€)</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1450,6 +1655,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportData: document.getElementById('btn-export-data'),
     btnImportData: document.getElementById('btn-import-data'),
     fileInputImport: document.getElementById('file-input-import'),
+
+    // Calculadora Flotante
+    btnOpenCalc: document.getElementById('btn-open-calc'),
+    modalCalc: document.getElementById('modal-calc'),
+    btnCloseCalc: document.getElementById('btn-close-calc'),
+    calcHistory: document.getElementById('calc-history'),
+    calcResult: document.getElementById('calc-result'),
+    btnCalcPaste: document.getElementById('btn-calc-paste'),
+    calcBtns: document.querySelectorAll('.calc-btn'),
 
     // Toast
     toast: document.getElementById('toast-msg')
@@ -2065,6 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('click', (e) => {
     if (e.target === elements.modalEdit) closeEditModal();
     if (e.target === elements.modalPerson) closePersonModal();
+    if (e.target === elements.modalCalc) closeCalcModal();
   });
 
   // ==========================================================
@@ -2186,6 +2401,217 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => console.log('ServiceWorker registrado correctamente'))
       .catch(err => console.log('Error registrando ServiceWorker:', err));
   }
+
+  // ==========================================================
+  // CALCULADORA FLOTANTE
+  // ==========================================================
+  const calcState = {
+    current: '0',
+    prev: null,
+    op: null,
+    resetNext: false
+  };
+
+  function updateCalcDisplay() {
+    if (elements.calcResult) {
+      elements.calcResult.textContent = calcState.current;
+    }
+    if (elements.calcHistory) {
+      if (calcState.prev !== null && calcState.op) {
+        const opSymbol = calcState.op === '*' ? '×' : (calcState.op === '/' ? '÷' : calcState.op);
+        elements.calcHistory.textContent = `${calcState.prev} ${opSymbol}`;
+      } else {
+        elements.calcHistory.textContent = '';
+      }
+    }
+  }
+
+  function calcInputDigit(digit) {
+    if (calcState.resetNext) {
+      calcState.current = digit === '.' ? '0.' : digit;
+      calcState.resetNext = false;
+    } else {
+      if (digit === '.') {
+        if (!calcState.current.includes('.')) {
+          calcState.current += '.';
+        }
+      } else {
+        if (calcState.current === '0') {
+          calcState.current = digit;
+        } else {
+          calcState.current += digit;
+        }
+      }
+    }
+    vibrate(12);
+    playTone(550, 0.04);
+    updateCalcDisplay();
+  }
+
+  function calcPerformOp() {
+    if (calcState.prev === null || calcState.op === null) return;
+    const a = parseFloat(calcState.prev);
+    const b = parseFloat(calcState.current);
+    if (isNaN(a) || isNaN(b)) return;
+
+    let res = 0;
+    if (calcState.op === '+') res = a + b;
+    else if (calcState.op === '-') res = a - b;
+    else if (calcState.op === '*') res = a * b;
+    else if (calcState.op === '/') res = b !== 0 ? (a / b) : 0;
+
+    // Redondear a 4 decimales si tiene decimales largos para evitar 0.30000000004
+    res = Math.round(res * 10000) / 10000;
+    calcState.current = String(res);
+    calcState.prev = null;
+    calcState.op = null;
+    calcState.resetNext = true;
+  }
+
+  function calcSetOperator(op) {
+    if (calcState.op && !calcState.resetNext) {
+      calcPerformOp();
+    }
+    calcState.prev = calcState.current;
+    calcState.op = op;
+    calcState.resetNext = true;
+    vibrate(15);
+    playTone(620, 0.05);
+    updateCalcDisplay();
+  }
+
+  function calcEquals() {
+    if (!calcState.op) return;
+    calcPerformOp();
+    vibrate(20);
+    playTone(720, 0.07);
+    updateCalcDisplay();
+  }
+
+  function calcClear() {
+    calcState.current = '0';
+    calcState.prev = null;
+    calcState.op = null;
+    calcState.resetNext = false;
+    vibrate(25);
+    playTone(380, 0.06);
+    updateCalcDisplay();
+  }
+
+  function calcBackspace() {
+    if (calcState.resetNext) return;
+    if (calcState.current.length > 1) {
+      calcState.current = calcState.current.slice(0, -1);
+    } else {
+      calcState.current = '0';
+    }
+    vibrate(12);
+    updateCalcDisplay();
+  }
+
+  function calcToggleSign() {
+    if (calcState.current !== '0') {
+      if (calcState.current.startsWith('-')) {
+        calcState.current = calcState.current.slice(1);
+      } else {
+        calcState.current = '-' + calcState.current;
+      }
+      updateCalcDisplay();
+    }
+  }
+
+  function openCalcModal() {
+    if (elements.modalCalc) elements.modalCalc.classList.add('open');
+    updateCalcDisplay();
+    vibrate(20);
+  }
+
+  function closeCalcModal() {
+    if (elements.modalCalc) elements.modalCalc.classList.remove('open');
+  }
+
+  if (elements.btnOpenCalc) elements.btnOpenCalc.addEventListener('click', openCalcModal);
+  if (elements.btnCloseCalc) elements.btnCloseCalc.addEventListener('click', closeCalcModal);
+
+  // Botón "Copiar al Valor del Apunte (€)"
+  if (elements.btnCalcPaste) {
+    elements.btnCalcPaste.addEventListener('click', () => {
+      // Si todavía hay operación pendiente, calcularla primero
+      if (calcState.op) {
+        calcPerformOp();
+        updateCalcDisplay();
+      }
+
+      const val = parseFloat(calcState.current);
+      if (!isNaN(val) && val > 0) {
+        // Si el modal de edición está abierto, copiar en el modal de edición
+        if (state.editingLoanId && elements.editInputAmount) {
+          elements.editInputAmount.value = val.toFixed(2);
+        } else if (elements.inputAmount) {
+          // Si no, copiar en el formulario principal
+          elements.inputAmount.value = val.toFixed(2);
+          // Si estamos en otra pestaña, cambiar a pestaña diario
+          if (state.activeTab !== 'diario') {
+            const tabDiarioBtn = document.querySelector('.nav-tab[data-tab="diario"]');
+            if (tabDiarioBtn) tabDiarioBtn.click();
+          }
+        }
+
+        playSuccessSound();
+        vibrate(35);
+        showToast(`💰 Valor copiado: ${val.toFixed(2)} €`);
+        closeCalcModal();
+      } else {
+        showToast('⚠️ El resultado debe ser un número mayor a 0');
+      }
+    });
+  }
+
+  // Eventos de botones de la calculadora
+  elements.calcBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const num = btn.getAttribute('data-num');
+      const op = btn.getAttribute('data-op');
+      const action = btn.getAttribute('data-action');
+
+      if (num !== null) {
+        calcInputDigit(num);
+      } else if (op) {
+        calcSetOperator(op);
+      } else if (action === 'clear') {
+        calcClear();
+      } else if (action === 'backspace') {
+        calcBackspace();
+      } else if (action === 'sign') {
+        calcToggleSign();
+      } else if (action === 'equals') {
+        calcEquals();
+      }
+    });
+  });
+
+  // Soporte de teclado para la calculadora cuando el modal está abierto
+  window.addEventListener('keydown', (e) => {
+    if (!elements.modalCalc || !elements.modalCalc.classList.contains('open')) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      calcInputDigit(e.key);
+    } else if (e.key === '.' || e.key === ',') {
+      calcInputDigit('.');
+    } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+      calcSetOperator(e.key);
+    } else if (e.key === 'Enter' || e.key === '=') {
+      e.preventDefault();
+      calcEquals();
+    } else if (e.key === 'Backspace') {
+      calcBackspace();
+    } else if (e.key === 'Escape') {
+      closeCalcModal();
+    } else if (e.key === 'c' || e.key === 'C') {
+      calcClear();
+    }
+  });
 
   // Escapar HTML auxiliar
   function escapeHtml(text) {

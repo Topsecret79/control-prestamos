@@ -336,6 +336,58 @@
     </div>
   </div>
 
+  <!-- Botón Flotante de Calculadora (FAB) -->
+  <button id="btn-open-calc" class="calc-fab" title="Abrir Calculadora Flotante" aria-label="Abrir Calculadora">🧮</button>
+
+  <!-- ==========================================
+       MODAL: CALCULADORA FLOTANTE
+       ========================================== -->
+  <div id="modal-calc" class="modal-backdrop">
+    <div class="calc-box">
+      <div class="modal-header">
+        <h3 class="modal-title">🧮 Calculadora Rápida</h3>
+        <button id="btn-close-calc" class="btn-close-modal">✕</button>
+      </div>
+
+      <div class="calc-screen">
+        <div id="calc-history" class="calc-history"></div>
+        <div id="calc-result" class="calc-result">0</div>
+      </div>
+
+      <div class="calc-grid">
+        <button class="calc-btn clear" data-action="clear">C</button>
+        <button class="calc-btn" data-action="backspace">⌫</button>
+        <button class="calc-btn op" data-op="/">÷</button>
+        <button class="calc-btn op" data-op="*">×</button>
+
+        <button class="calc-btn" data-num="7">7</button>
+        <button class="calc-btn" data-num="8">8</button>
+        <button class="calc-btn" data-num="9">9</button>
+        <button class="calc-btn op" data-op="-">−</button>
+
+        <button class="calc-btn" data-num="4">4</button>
+        <button class="calc-btn" data-num="5">5</button>
+        <button class="calc-btn" data-num="6">6</button>
+        <button class="calc-btn op" data-op="+">+</button>
+
+        <button class="calc-btn" data-num="1">1</button>
+        <button class="calc-btn" data-num="2">2</button>
+        <button class="calc-btn" data-num="3">3</button>
+        <button class="calc-btn equals" data-action="equals">=</button>
+
+        <button class="calc-btn" data-action="sign">±</button>
+        <button class="calc-btn" data-num="0">0</button>
+        <button class="calc-btn" data-num=".">.</button>
+        <button class="calc-btn equals" data-action="equals" style="font-size: 1.1rem;">=</button>
+
+        <button id="btn-calc-paste" class="calc-btn-paste">
+          <span>📥</span>
+          <span>Copiar al Valor del Apunte (€)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notificación Flotante -->
   <div id="toast-msg" class="toast-msg">Mensaje</div>
 

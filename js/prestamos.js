@@ -100,6 +100,47 @@ class PrestamosManager {
   }
 
   /**
+   * Añadir múltiples préstamos o conceptos de una sola vez para una persona
+   * @param {string} dateStr
+   * @param {string} personName
+   * @param {Array<{concept: string, amount: number}>} items
+   */
+  addMultipleLoans(dateStr, personName, items) {
+    const trimmedPerson = (personName || '').trim();
+    if (!trimmedPerson) throw new Error('El nombre de la persona es obligatorio');
+    if (!Array.isArray(items) || items.length === 0) throw new Error('Debe incluir al menos un concepto');
+
+    const created = [];
+    const date = dateStr || this.getTodayDateString();
+    const nowIso = new Date().toISOString();
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const trimmedConcept = (it.concept || 'Adelanto').trim();
+      const parsedAmount = parseFloat(it.amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) continue;
+
+      const newLoan = {
+        id: Date.now() + Math.random().toString(36).substr(2, 4) + i,
+        date,
+        person: trimmedPerson,
+        concept: trimmedConcept,
+        amount: parsedAmount,
+        createdAt: nowIso
+      };
+      this.loans.unshift(newLoan);
+      created.push(newLoan);
+    }
+
+    if (created.length === 0) {
+      throw new Error('No se guardó ningún apunte. Revisa que el valor sea mayor a 0');
+    }
+
+    this.save();
+    return created;
+  }
+
+  /**
    * Editar un préstamo existente
    */
   editLoan(id, updatedData) {

@@ -266,6 +266,104 @@ body {
   border-color: var(--emerald);
 }
 
+/* Filas dinámicas de múltiples conceptos */
+.concept-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.concept-row-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 42, 71, 0.45);
+  border: 1px solid var(--border-color);
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.concept-row-inputs {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 8px;
+}
+
+.row-amount-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.row-amount-wrap .currency-symbol {
+  position: absolute;
+  right: 10px;
+  color: var(--text-dim);
+  font-weight: 800;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.row-amount-wrap .row-amount {
+  padding-right: 24px;
+}
+
+.btn-remove-row {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--danger);
+  width: 32px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.btn-remove-row:active {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-add-concept-link {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid var(--emerald);
+  color: var(--emerald-light);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s;
+}
+
+.btn-add-concept-link:active {
+  transform: scale(0.95);
+}
+
+.form-subtotal-badge {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
 .btn-submit-action {
   background: linear-gradient(135deg, #10b981, #059669);
   color: #0b0f19;

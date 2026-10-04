@@ -19,6 +19,18 @@ const l5 = pm.addLoan('2026-09-15', 'Pedro Soto', 'Material ferretería', 80.00)
 assert.strictEqual(pm.loans.length, 5, 'Debe haber 5 préstamos registrados');
 console.log('✅ 5 préstamos creados correctamente.');
 
+console.log('Test 1.1: Agregar múltiples conceptos a la vez...');
+const multi = pm.addMultipleLoans('2026-11-05', 'Mario Conde', [
+  { concept: 'Gasolina', amount: 30 },
+  { concept: 'Dietas', amount: 20 },
+  { concept: 'Peaje', amount: 12.5 }
+]);
+assert.strictEqual(multi.length, 3, 'Debe haber agregado 3 conceptos');
+const d5 = pm.getDailyLoans('2026-11-05');
+assert.strictEqual(d5.totalAmount, 62.5, 'Total de los 3 conceptos debe ser 62.5');
+console.log('✅ Múltiples conceptos agregados correctamente en un solo guardado.');
+
+
 // 3. Prueba de Sumatorio Diario (2026-10-04)
 console.log('Test 2: Sumatorio Diario...');
 const daily = pm.getDailyLoans('2026-10-04');

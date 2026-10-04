@@ -23,8 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Formulario de Registro
     form: document.getElementById('loan-form'),
     inputPerson: document.getElementById('input-person'),
-    inputConcept: document.getElementById('input-concept'),
-    inputAmount: document.getElementById('input-amount'),
+    conceptRowsContainer: document.getElementById('concept-rows-container'),
+    btnAddConceptRow: document.getElementById('btn-add-concept-row'),
+    formTotalBadge: document.getElementById('form-total-badge'),
+    formSubtotalVal: document.getElementById('form-subtotal-val'),
+    btnSubmitLoans: document.getElementById('btn-submit-loans'),
+    btnSubmitText: document.getElementById('btn-submit-text'),
     inputDate: document.getElementById('input-date'),
     conceptChips: document.querySelectorAll('.concept-chip'),
     peopleDatalist: document.getElementById('people-datalist'),
@@ -431,32 +435,160 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================
+  // GESTIÓN DINÁMICA DE MÚLTIPLES CONCEPTOS POR APUNTE
+  // ==========================================================
+  let conceptRowCount = 0;
+  let lastFocusedAmountInput = null;
+
+  function createConceptRow(concept = 'Adelanto', amount = '') {
+    conceptRowCount++;
+    const row = document.createElement('div');
+    row.className = 'concept-row-item';
+    row.id = `concept-row-${Date.now()}-${conceptRowCount}`;
+
+    row.innerHTML = `
+      <div class="concept-row-inputs">
+        <input type="text" class="form-input row-concept" placeholder="Gasto / Motivo" value="${escapeHtml(concept)}" required>
+        <div class="row-amount-wrap">
+          <input type="number" class="form-input row-amount" placeholder="0.00" step="0.01" min="0.01" value="${amount}" required inputmode="decimal">
+          <span class="currency-symbol">€</span>
+        </div>
+      </div>
+      <button type="button" class="btn-remove-row" title="Quitar concepto">✕</button>
+    `;
+
+    const inputConceptEl = row.querySelector('.row-concept');
+    const inputAmountEl = row.querySelector('.row-amount');
+    const btnRemove = row.querySelector('.btn-remove-row');
+
+    inputAmountEl.addEventListener('focus', () => {
+      lastFocusedAmountInput = inputAmountEl;
+    });
+
+    inputAmountEl.addEventListener('input', updateFormSubtotal);
+    inputConceptEl.addEventListener('input', updateFormSubtotal);
+
+    btnRemove.addEventListener('click', () => {
+      if (!elements.conceptRowsContainer) return;
+      const allRows = elements.conceptRowsContainer.querySelectorAll('.concept-row-item');
+      if (allRows.length > 1) {
+        row.remove();
+        vibrate(15);
+        updateFormSubtotal();
+        updateRemoveButtonsVisibility();
+      } else {
+        inputConceptEl.value = 'Adelanto';
+        inputAmountEl.value = '';
+        updateFormSubtotal();
+      }
+    });
+
+    if (elements.conceptRowsContainer) {
+      elements.conceptRowsContainer.appendChild(row);
+      updateRemoveButtonsVisibility();
+      updateFormSubtotal();
+    }
+    return { row, inputConceptEl, inputAmountEl };
+  }
+
+  function updateRemoveButtonsVisibility() {
+    if (!elements.conceptRowsContainer) return;
+    const allRows = elements.conceptRowsContainer.querySelectorAll('.concept-row-item');
+    allRows.forEach(r => {
+      const btn = r.querySelector('.btn-remove-row');
+      if (btn) {
+        btn.style.display = allRows.length > 1 ? 'flex' : 'none';
+      }
+    });
+  }
+
+  function updateFormSubtotal() {
+    if (!elements.conceptRowsContainer) return;
+    const rows = elements.conceptRowsContainer.querySelectorAll('.concept-row-item');
+    let total = 0;
+    let validCount = 0;
+
+    rows.forEach(r => {
+      const amt = parseFloat(r.querySelector('.row-amount').value);
+      if (!isNaN(amt) && amt > 0) {
+        total += amt;
+        validCount++;
+      }
+    });
+
+    if (elements.formTotalBadge) {
+      if (rows.length > 1 || validCount > 0) {
+        elements.formTotalBadge.style.display = 'flex';
+        if (elements.formSubtotalVal) elements.formSubtotalVal.textContent = formatMoney(total);
+      } else {
+        elements.formTotalBadge.style.display = 'none';
+      }
+    }
+
+    if (elements.btnSubmitText) {
+      if (rows.length > 1) {
+        elements.btnSubmitText.textContent = `GUARDAR ${rows.length} CONCEPTOS (${formatMoney(total)})`;
+      } else {
+        elements.btnSubmitText.textContent = total > 0
+          ? `GUARDAR APUNTE (${formatMoney(total)})`
+          : 'GUARDAR APUNTE';
+      }
+    }
+  }
+
+  function resetConceptRows() {
+    if (!elements.conceptRowsContainer) return;
+    elements.conceptRowsContainer.innerHTML = '';
+    createConceptRow('Adelanto', '');
+  }
+
+  // Botón para añadir otra fila de concepto manualmente
+  if (elements.btnAddConceptRow) {
+    elements.btnAddConceptRow.addEventListener('click', () => {
+      vibrate(20);
+      playTone(600, 0.05);
+      const newRow = createConceptRow('Adelanto', '');
+      newRow.inputAmountEl.focus();
+    });
+  }
+
+  // ==========================================================
   // CHIPS DE CONCEPTOS RÁPIDOS
   // ==========================================================
   elements.conceptChips.forEach(chip => {
     chip.addEventListener('click', () => {
       const text = chip.getAttribute('data-concept') || chip.textContent.trim();
-      if (elements.inputConcept) {
-        elements.inputConcept.value = text;
-        vibrate(20);
-        playTone(700, 0.05);
-        if (elements.inputAmount) {
-          elements.inputAmount.focus();
-        }
+      vibrate(20);
+      playTone(700, 0.05);
+
+      if (!elements.conceptRowsContainer) return;
+      const rows = elements.conceptRowsContainer.querySelectorAll('.concept-row-item');
+      const lastRow = rows[rows.length - 1];
+      const lastConceptInput = lastRow ? lastRow.querySelector('.row-concept') : null;
+      const lastAmountInput = lastRow ? lastRow.querySelector('.row-amount') : null;
+
+      // Si la última fila ya tiene importe, añadir una nueva fila con este concepto
+      if (lastAmountInput && lastAmountInput.value.trim() !== '') {
+        const newRow = createConceptRow(text, '');
+        newRow.inputAmountEl.focus();
+        showToast(`➕ Añadido: ${text}`);
+      } else {
+        // Asignar a la fila actual
+        if (lastConceptInput) lastConceptInput.value = text;
+        if (lastAmountInput) lastAmountInput.focus();
       }
+      updateFormSubtotal();
     });
   });
 
   // ==========================================================
-  // FORMULARIO: REGISTRO DE PRÉSTAMO
+  // FORMULARIO: REGISTRO DE PRÉSTAMOS / GASTOS
   // ==========================================================
   if (elements.form) {
     elements.form.addEventListener('submit', (e) => {
       e.preventDefault();
 
       const person = elements.inputPerson ? elements.inputPerson.value.trim() : '';
-      const concept = elements.inputConcept ? elements.inputConcept.value.trim() : 'Adelanto';
-      const amountVal = elements.inputAmount ? elements.inputAmount.value : '';
       const dateVal = (elements.inputDate && elements.inputDate.value)
         ? elements.inputDate.value
         : state.selectedDate;
@@ -467,17 +599,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const amountNum = parseFloat(amountVal);
-      if (isNaN(amountNum) || amountNum <= 0) {
-        showToast('⚠️ Introduce un importe válido mayor a 0');
-        if (elements.inputAmount) elements.inputAmount.focus();
-        return;
+      if (!elements.conceptRowsContainer) return;
+      const rows = elements.conceptRowsContainer.querySelectorAll('.concept-row-item');
+      const itemsToSave = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const cVal = rows[i].querySelector('.row-concept').value.trim() || 'Adelanto';
+        const aVal = parseFloat(rows[i].querySelector('.row-amount').value);
+
+        if (isNaN(aVal) || aVal <= 0) {
+          showToast(`⚠️ Revisa el valor del concepto #${i + 1}`);
+          rows[i].querySelector('.row-amount').focus();
+          return;
+        }
+
+        itemsToSave.push({ concept: cVal, amount: aVal });
       }
 
       try {
-        prestamosManager.addLoan(dateVal, person, concept, amountNum);
+        prestamosManager.addMultipleLoans(dateVal, person, itemsToSave);
 
-        // Si la fecha guardada es distinta a la seleccionada actualmente, mover la vista a esa fecha
         state.selectedDate = dateVal;
         const [y, m] = dateVal.split('-').map(Number);
         if (y && m) {
@@ -487,11 +628,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         playSuccessSound();
         vibrate(40);
-        showToast(`✅ Guardado: ${person} - ${formatMoney(amountNum)}`);
 
-        // Limpiar importe y concepto, mantener foco
-        if (elements.inputAmount) elements.inputAmount.value = '';
-        if (elements.inputConcept) elements.inputConcept.value = '';
+        const totalSaved = itemsToSave.reduce((s, it) => s + it.amount, 0);
+        const msg = itemsToSave.length === 1
+          ? `✅ Guardado: ${person} - ${formatMoney(totalSaved)}`
+          : `✅ Guardados ${itemsToSave.length} conceptos para ${person} (${formatMoney(totalSaved)})`;
+        showToast(msg);
+
+        // Resetear conceptos y mantener foco en persona para el siguiente registro
+        resetConceptRows();
         if (elements.inputPerson) elements.inputPerson.focus();
 
         renderAll();
@@ -974,9 +1119,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si el modal de edición está abierto, copiar en el modal de edición
         if (state.editingLoanId && elements.editInputAmount) {
           elements.editInputAmount.value = val.toFixed(2);
-        } else if (elements.inputAmount) {
-          // Si no, copiar en el formulario principal
-          elements.inputAmount.value = val.toFixed(2);
+        } else {
+          // Copiar en el input de importe enfocado o en la última fila
+          let targetInput = lastFocusedAmountInput;
+          if (!targetInput || !document.body.contains(targetInput)) {
+            const rows = elements.conceptRowsContainer ? elements.conceptRowsContainer.querySelectorAll('.concept-row-item') : [];
+            if (rows.length > 0) {
+              targetInput = rows[rows.length - 1].querySelector('.row-amount');
+            }
+          }
+          if (targetInput) {
+            targetInput.value = val.toFixed(2);
+            updateFormSubtotal();
+          }
           // Si estamos en otra pestaña, cambiar a pestaña diario
           if (state.activeTab !== 'diario') {
             const tabDiarioBtn = document.querySelector('.nav-tab[data-tab="diario"]');
@@ -1053,6 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
   }
 
-  // Render inicial
+  // Inicialización de filas y render inicial
+  resetConceptRows();
   renderAll();
 });

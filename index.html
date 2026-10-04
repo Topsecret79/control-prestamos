@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Control de Préstamos y Adelantos | PrestApp</title>
+  <meta name="description" content="Aplicación gratuita para registrar y controlar préstamos, adelantos y gastos diarios y mensuales con sumatorios automáticos y reportes por WhatsApp.">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PrestApp">
+
+  <!-- Iconos y Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Encabezado de la Aplicación -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon">💰</span>
+      <div>
+        <div class="brand-title">Control de Préstamos</div>
+        <div style="font-size: 0.68rem; color: var(--emerald-light); font-weight: 700;">y Adelantos • PrestApp</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="btn-install-pwa" class="picker-nav-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669); color: #0b0f19; font-weight: 900; border: none; padding: 6px 12px;">
+        📲 Instalar
+      </button>
+      <span class="brand-badge">100% Gratis</span>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="main-container">
+
+    <!-- ==========================================
+         PESTAÑA 1: VISTA DIARIA Y REGISTRO
+         ========================================== -->
+    <section id="pane-diario" class="tab-pane active">
+
+      <!-- Formulario de Registro Rápido -->
+      <form id="loan-form" class="card-form" autocomplete="off">
+        <div class="form-title">
+          <span>➕</span>
+          <span>Añadir Préstamo o Adelanto</span>
+        </div>
+
+        <div class="form-grid">
+          <!-- Persona -->
+          <div class="form-group">
+            <label class="form-label" for="input-person">Persona (Nombre):</label>
+            <input type="text" id="input-person" class="form-input" placeholder="Ej: Carlos Ruiz" list="people-datalist" required>
+            <datalist id="people-datalist"></datalist>
+          </div>
+
+          <!-- Conceptos Rápidos -->
+          <div class="form-group">
+            <label class="form-label">Concepto habitual (Toca para elegir):</label>
+            <div class="concept-chips-wrap">
+              <span class="concept-chip" data-concept="Adelanto">⚡ Adelanto</span>
+              <span class="concept-chip" data-concept="Gasolina">⛽ Gasolina</span>
+              <span class="concept-chip" data-concept="Comida">🍔 Comida</span>
+              <span class="concept-chip" data-concept="Reparación">🔧 Reparación</span>
+              <span class="concept-chip" data-concept="Material">📦 Material</span>
+              <span class="concept-chip" data-concept="Dietas">🍽️ Dietas</span>
+              <span class="concept-chip" data-concept="Préstamo personal">🤝 Préstamo</span>
+              <span class="concept-chip" data-concept="Varios">📌 Varios</span>
+            </div>
+          </div>
+
+          <!-- Concepto y Valor en una fila -->
+          <div class="form-row-duo">
+            <div class="form-group">
+              <label class="form-label" for="input-concept">Gasto / Motivo:</label>
+              <input type="text" id="input-concept" class="form-input" placeholder="Ej: Adelanto" value="Adelanto">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-amount">Valor (€):</label>
+              <input type="number" id="input-amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required inputmode="decimal">
+            </div>
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label class="form-label" for="input-date">Fecha:</label>
+            <input type="date" id="input-date" class="form-input" required>
+          </div>
+
+          <!-- Botón Guardar -->
+          <button type="submit" class="btn-submit-action">
+            <span>💾</span>
+            <span>GUARDAR APUNTE</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Selector de Fecha Diaria -->
+      <div class="picker-card">
+        <button id="btn-prev-day" class="picker-nav-btn" title="Día anterior">◀ Ayer</button>
+        <div class="picker-center">
+          <div id="daily-date-title" class="picker-title">Hoy</div>
+          <div id="daily-date-sub" class="picker-sub">Día consultado</div>
+        </div>
+        <button id="btn-next-day" class="picker-nav-btn" title="Día siguiente">Mañana ▶</button>
+        <button id="btn-today" class="picker-nav-btn" style="color: var(--emerald-light); font-weight: 800;" title="Ir a hoy">Hoy</button>
+      </div>
+
+      <!-- Tarjeta Hero Sumatorio Diario -->
+      <div class="hero-summary-card">
+        <div class="hero-summary-header">
+          <span class="hero-summary-tag">
+            <span>📈</span>
+            <span>Sumatorio por Día</span>
+          </span>
+          <span style="font-size: 0.8rem; color: var(--emerald-light); font-weight: 700;">Total Diario</span>
+        </div>
+        <div id="daily-total-amount" class="hero-summary-value">0,00 €</div>
+        <div id="daily-count-sub" class="hero-summary-sub">0 préstamos registrados hoy</div>
+      </div>
+
+      <!-- Lista de Préstamos del Día -->
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>📋</span>
+          <span>Apuntes del día</span>
+        </h3>
+      </div>
+
+      <div id="daily-loans-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="daily-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">📝</div>
+        <div style="font-weight: 700;">No hay apuntes en esta fecha</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Usa el formulario superior para registrar el primero.</div>
+      </div>
+
+      <!-- Botón Compartir Día por WhatsApp -->
+      <button id="btn-share-daily-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Compartir Día por WhatsApp</span>
+      </button>
+
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 2: VISTA MENSUAL
+         ========================================== -->
+    <section id="pane-mensual" class="tab-pane">
+
+      <!-- Selector de Mes -->
+      <div class="picker-card">
+        <button id="btn-prev-month" class="picker-nav-btn">◀ Anterior</button>
+        <div class="picker-center">
+          <div id="monthly-title" class="picker-title">Octubre 2026</div>
+          <div id="monthly-sub" class="picker-sub">Mes consultado</div>
+        </div>
+        <button id="btn-next-month" class="picker-nav-btn">Siguiente ▶</button>
+        <button id="btn-current-month" class="picker-nav-btn" style="color: var(--gold-light); font-weight: 800;">Actual</button>
+      </div>
+
+      <!-- Tarjeta Hero Sumatorio Mensual -->
+      <div class="hero-summary-card monthly">
+        <div class="hero-summary-header">
+          <span class="hero-summary-tag">
+            <span>📊</span>
+            <span>Sumatorio Mensual</span>
+          </span>
+          <span style="font-size: 0.8rem; color: var(--gold-light); font-weight: 700;">Gran Total Mes</span>
+        </div>
+        <div id="monthly-grand-total" class="hero-summary-value">0,00 €</div>
+        <div id="monthly-count-sub" class="hero-summary-sub">0 movimientos totales en el mes</div>
+      </div>
+
+      <!-- Desglose por Persona en el Mes -->
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>👥</span>
+          <span>Total prestado por persona</span>
+        </h3>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Ordenado de mayor a menor</span>
+      </div>
+
+      <div id="monthly-people-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="monthly-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">📅</div>
+        <div style="font-weight: 700;">No hay movimientos en este mes</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Los apuntes guardados en este mes se acumularán automáticamente aquí.</div>
+      </div>
+
+      <!-- Botón Compartir Mes por WhatsApp -->
+      <button id="btn-share-monthly-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Compartir Resumen Mensual por WhatsApp</span>
+      </button>
+
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 3: PERSONAS Y AJUSTES
+         ========================================== -->
+    <section id="pane-personas" class="tab-pane">
+
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>👥</span>
+          <span>Histórico de personas</span>
+        </h3>
+        <span id="all-people-count-badge" class="brand-badge" style="background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border-color);">0 personas</span>
+      </div>
+
+      <div id="all-people-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="all-people-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">👤</div>
+        <div style="font-weight: 700;">Aún no hay personas registradas</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Al registrar el primer préstamo se guardará automáticamente en este listado.</div>
+      </div>
+
+      <!-- Copias de Seguridad y Datos -->
+      <div class="card-form" style="margin-top: 10px;">
+        <div class="form-title">
+          <span>💾</span>
+          <span>Copias de Seguridad (Tus Datos)</span>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4;">
+          Tus registros se guardan 100% en la memoria de tu dispositivo de manera privada. Puedes descargar una copia de seguridad o transferir tus datos a otro móvil o PC:
+        </p>
+        <div class="form-row-duo">
+          <button id="btn-export-data" class="picker-nav-btn" style="background: var(--bg-card); border-color: var(--emerald); color: var(--emerald-light); font-weight: 800; padding: 12px;">
+            📥 Descargar Copia (JSON)
+          </button>
+          <button id="btn-import-data" class="picker-nav-btn" style="background: var(--bg-card); border-color: var(--sky); color: var(--sky); font-weight: 800; padding: 12px;">
+            📤 Cargar Copia
+          </button>
+        </div>
+        <input type="file" id="file-input-import" accept=".json" style="display: none;">
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegación Inferior (Móvil) -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" data-tab="diario">
+      <span class="tab-icon">📅</span>
+      <span class="tab-label">Diario</span>
+    </button>
+    <button class="nav-tab" data-tab="mensual">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Mensual</span>
+    </button>
+    <button class="nav-tab" data-tab="personas">
+      <span class="tab-icon">👥</span>
+      <span class="tab-label">Personas</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================
+       MODAL: EDITAR PRÉSTAMO
+       ========================================== -->
+  <div id="modal-edit" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Editar Apunte</h3>
+        <button id="btn-close-edit-modal" class="btn-close-modal">✕</button>
+      </div>
+
+      <form id="form-edit" class="form-grid">
+        <input type="hidden" id="edit-loan-id">
+
+        <div class="form-group">
+          <label class="form-label" for="edit-date">Fecha:</label>
+          <input type="date" id="edit-date" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-person">Persona:</label>
+          <input type="text" id="edit-person" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-concept">Gasto / Motivo:</label>
+          <input type="text" id="edit-concept" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-amount">Valor (€):</label>
+          <input type="number" id="edit-amount" class="form-input" step="0.01" min="0.01" required inputmode="decimal">
+        </div>
+
+        <div class="form-row-duo" style="margin-top: 8px;">
+          <button type="button" id="btn-cancel-edit" class="picker-nav-btn" style="padding: 12px;">Cancelar</button>
+          <button type="submit" class="btn-submit-action" style="margin-top: 0; padding: 12px;">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: DETALLE DE PERSONA
+       ========================================== -->
+  <div id="modal-person" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-person-title" class="modal-title">👤 Carlos Ruiz</h3>
+        <button id="btn-close-person-modal" class="btn-close-modal">✕</button>
+      </div>
+
+      <div id="modal-person-total" style="font-size: 1.1rem; font-weight: 900; color: var(--gold-light);">
+        Total en el mes: 0,00 €
+      </div>
+
+      <div id="modal-person-list" class="loans-list" style="max-height: 280px; overflow-y: auto;">
+        <!-- Apuntes de la persona -->
+      </div>
+
+      <button id="btn-share-person-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Enviar cuenta individual por WhatsApp</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notificación Flotante -->
+  <div id="toast-msg" class="toast-msg">Mensaje</div>
+
+  <!-- Scripts -->
+  <script src="js/prestamos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

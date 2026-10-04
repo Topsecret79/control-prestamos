@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Control de Préstamos y Adelantos | PrestApp</title>
+  <meta name="description" content="Aplicación gratuita para registrar y controlar préstamos, adelantos y gastos diarios y mensuales con sumatorios automáticos y reportes por WhatsApp.">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PrestApp">
+
+  <!-- Iconos y Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Estilos -->
+  <style>
+/* Estilos Móviles Profesionales: Control de Préstamos y Adelantos (PrestApp) */
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-card: #141c30;
+  --bg-card-hover: #1b2640;
+  --bg-elevated: #1e2a47;
+  --border-color: #273759;
+  --border-active: #3b82f6;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --emerald: #10b981;
+  --emerald-light: #34d399;
+  --emerald-glow: rgba(16, 185, 129, 0.25);
+
+  --gold: #f59e0b;
+  --gold-light: #fbbf24;
+  --gold-glow: rgba(245, 158, 11, 0.2);
+
+  --sky: #0ea5e9;
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.25);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(75px + var(--safe-bottom));
+}
+
+/* Encabezado Fijo */
+.app-header {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 1.6rem;
+}
+
+.brand-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.brand-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #0b0f19;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Barra Inferior Móvil */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(65px + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 900;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 0;
+  gap: 3px;
+}
+
+.nav-tab .tab-icon {
+  font-size: 1.35rem;
+  transition: transform 0.2s;
+}
+
+.nav-tab .tab-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.nav-tab.active {
+  color: var(--emerald);
+}
+
+.nav-tab.active .tab-icon {
+  transform: translateY(-2px);
+}
+
+/* Contenedor Principal */
+.main-container {
+  flex: 1;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 14px;
+}
+
+.tab-pane {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.tab-pane.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================
+   FORMULARIO DE REGISTRO RÁPIDO
+   ========================================================== */
+.card-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-row-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.form-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+}
+
+.form-input:focus {
+  border-color: var(--emerald);
+}
+
+/* Chips de conceptos rápidos */
+.concept-chips-wrap {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+.concept-chips-wrap::-webkit-scrollbar { display: none; }
+
+.concept-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.concept-chip:active {
+  background: var(--emerald);
+  color: #0b0f19;
+  border-color: var(--emerald);
+}
+
+.btn-submit-action {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #0b0f19;
+  border: none;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-weight: 900;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px var(--emerald-glow);
+  transition: transform 0.15s;
+  margin-top: 4px;
+}
+
+.btn-submit-action:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================
+   TARJETAS DE RESUMEN DIARIO Y MENSUAL
+   ========================================================== */
+.hero-summary-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(14, 165, 233, 0.08));
+  border: 2px solid var(--emerald);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-summary-card.monthly {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(16, 185, 129, 0.08));
+  border-color: var(--gold);
+}
+
+.hero-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-summary-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--emerald-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-summary-card.monthly .hero-summary-tag {
+  color: var(--gold-light);
+}
+
+.hero-summary-value {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.hero-summary-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Selector de Fecha / Mes */
+.picker-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.picker-nav-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.picker-nav-btn:active {
+  transform: scale(0.95);
+  background: var(--border-color);
+}
+
+.picker-center {
+  flex: 1;
+  text-align: center;
+}
+
+.picker-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.picker-sub {
+  font-size: 0.75rem;
+  color: var(--sky);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* ==========================================================
+   LISTA DE PRÉSTAMOS DEL DÍA
+   ========================================================== */
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loan-item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s;
+}
+
+.loan-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.loan-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--emerald-light);
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.loan-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.loan-person-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loan-concept-tag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loan-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loan-amount-badge {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.btn-icon-action {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-icon-action:active {
+  transform: scale(0.92);
+}
+
+.btn-icon-action.delete {
+  color: var(--danger);
+}
+
+/* ==========================================================
+   RESUMEN MENSUAL POR PERSONAS
+   ========================================================== */
+.person-monthly-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.person-monthly-card:active {
+  background: var(--bg-card-hover);
+  transform: scale(0.98);
+}
+
+.person-monthly-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.person-monthly-rank {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  width: 24px;
+}
+
+.person-monthly-name {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-left: 6px;
+}
+
+.person-monthly-amount {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--gold-light);
+}
+
+.person-monthly-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* Botón Compartir en WhatsApp */
+.share-whatsapp-btn {
+  background: linear-gradient(135deg, #15803d, #047857);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.35);
+  margin-top: 6px;
+}
+
+.share-whatsapp-btn:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================
+   MODALES
+   ========================================================== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 440px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 18px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: zoomIn 0.2s ease;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.btn-close-modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+/* Toast flotante */
+.toast-msg {
+  position: fixed;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #10b981;
+  color: #0b0f19;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 1200;
+  white-space: nowrap;
+}
+
+.toast-msg.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+</style>
+</head>
+<body>
+
+  <!-- Encabezado de la Aplicación -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon">💰</span>
+      <div>
+        <div class="brand-title">Control de Préstamos</div>
+        <div style="font-size: 0.68rem; color: var(--emerald-light); font-weight: 700;">y Adelantos • PrestApp</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="btn-install-pwa" class="picker-nav-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669); color: #0b0f19; font-weight: 900; border: none; padding: 6px 12px;">
+        📲 Instalar
+      </button>
+      <span class="brand-badge">100% Gratis</span>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="main-container">
+
+    <!-- ==========================================
+         PESTAÑA 1: VISTA DIARIA Y REGISTRO
+         ========================================== -->
+    <section id="pane-diario" class="tab-pane active">
+
+      <!-- Formulario de Registro Rápido -->
+      <form id="loan-form" class="card-form" autocomplete="off">
+        <div class="form-title">
+          <span>➕</span>
+          <span>Añadir Préstamo o Adelanto</span>
+        </div>
+
+        <div class="form-grid">
+          <!-- Persona -->
+          <div class="form-group">
+            <label class="form-label" for="input-person">Persona (Nombre):</label>
+            <input type="text" id="input-person" class="form-input" placeholder="Ej: Carlos Ruiz" list="people-datalist" required>
+            <datalist id="people-datalist"></datalist>
+          </div>
+
+          <!-- Conceptos Rápidos -->
+          <div class="form-group">
+            <label class="form-label">Concepto habitual (Toca para elegir):</label>
+            <div class="concept-chips-wrap">
+              <span class="concept-chip" data-concept="Adelanto">⚡ Adelanto</span>
+              <span class="concept-chip" data-concept="Gasolina">⛽ Gasolina</span>
+              <span class="concept-chip" data-concept="Comida">🍔 Comida</span>
+              <span class="concept-chip" data-concept="Reparación">🔧 Reparación</span>
+              <span class="concept-chip" data-concept="Material">📦 Material</span>
+              <span class="concept-chip" data-concept="Dietas">🍽️ Dietas</span>
+              <span class="concept-chip" data-concept="Préstamo personal">🤝 Préstamo</span>
+              <span class="concept-chip" data-concept="Varios">📌 Varios</span>
+            </div>
+          </div>
+
+          <!-- Concepto y Valor en una fila -->
+          <div class="form-row-duo">
+            <div class="form-group">
+              <label class="form-label" for="input-concept">Gasto / Motivo:</label>
+              <input type="text" id="input-concept" class="form-input" placeholder="Ej: Adelanto" value="Adelanto">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-amount">Valor (€):</label>
+              <input type="number" id="input-amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required inputmode="decimal">
+            </div>
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label class="form-label" for="input-date">Fecha:</label>
+            <input type="date" id="input-date" class="form-input" required>
+          </div>
+
+          <!-- Botón Guardar -->
+          <button type="submit" class="btn-submit-action">
+            <span>💾</span>
+            <span>GUARDAR APUNTE</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Selector de Fecha Diaria -->
+      <div class="picker-card">
+        <button id="btn-prev-day" class="picker-nav-btn" title="Día anterior">◀ Ayer</button>
+        <div class="picker-center">
+          <div id="daily-date-title" class="picker-title">Hoy</div>
+          <div id="daily-date-sub" class="picker-sub">Día consultado</div>
+        </div>
+        <button id="btn-next-day" class="picker-nav-btn" title="Día siguiente">Mañana ▶</button>
+        <button id="btn-today" class="picker-nav-btn" style="color: var(--emerald-light); font-weight: 800;" title="Ir a hoy">Hoy</button>
+      </div>
+
+      <!-- Tarjeta Hero Sumatorio Diario -->
+      <div class="hero-summary-card">
+        <div class="hero-summary-header">
+          <span class="hero-summary-tag">
+            <span>📈</span>
+            <span>Sumatorio por Día</span>
+          </span>
+          <span style="font-size: 0.8rem; color: var(--emerald-light); font-weight: 700;">Total Diario</span>
+        </div>
+        <div id="daily-total-amount" class="hero-summary-value">0,00 €</div>
+        <div id="daily-count-sub" class="hero-summary-sub">0 préstamos registrados hoy</div>
+      </div>
+
+      <!-- Lista de Préstamos del Día -->
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>📋</span>
+          <span>Apuntes del día</span>
+        </h3>
+      </div>
+
+      <div id="daily-loans-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="daily-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">📝</div>
+        <div style="font-weight: 700;">No hay apuntes en esta fecha</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Usa el formulario superior para registrar el primero.</div>
+      </div>
+
+      <!-- Botón Compartir Día por WhatsApp -->
+      <button id="btn-share-daily-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Compartir Día por WhatsApp</span>
+      </button>
+
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 2: VISTA MENSUAL
+         ========================================== -->
+    <section id="pane-mensual" class="tab-pane">
+
+      <!-- Selector de Mes -->
+      <div class="picker-card">
+        <button id="btn-prev-month" class="picker-nav-btn">◀ Anterior</button>
+        <div class="picker-center">
+          <div id="monthly-title" class="picker-title">Octubre 2026</div>
+          <div id="monthly-sub" class="picker-sub">Mes consultado</div>
+        </div>
+        <button id="btn-next-month" class="picker-nav-btn">Siguiente ▶</button>
+        <button id="btn-current-month" class="picker-nav-btn" style="color: var(--gold-light); font-weight: 800;">Actual</button>
+      </div>
+
+      <!-- Tarjeta Hero Sumatorio Mensual -->
+      <div class="hero-summary-card monthly">
+        <div class="hero-summary-header">
+          <span class="hero-summary-tag">
+            <span>📊</span>
+            <span>Sumatorio Mensual</span>
+          </span>
+          <span style="font-size: 0.8rem; color: var(--gold-light); font-weight: 700;">Gran Total Mes</span>
+        </div>
+        <div id="monthly-grand-total" class="hero-summary-value">0,00 €</div>
+        <div id="monthly-count-sub" class="hero-summary-sub">0 movimientos totales en el mes</div>
+      </div>
+
+      <!-- Desglose por Persona en el Mes -->
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>👥</span>
+          <span>Total prestado por persona</span>
+        </h3>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Ordenado de mayor a menor</span>
+      </div>
+
+      <div id="monthly-people-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="monthly-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">📅</div>
+        <div style="font-weight: 700;">No hay movimientos en este mes</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Los apuntes guardados en este mes se acumularán automáticamente aquí.</div>
+      </div>
+
+      <!-- Botón Compartir Mes por WhatsApp -->
+      <button id="btn-share-monthly-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Compartir Resumen Mensual por WhatsApp</span>
+      </button>
+
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 3: PERSONAS Y AJUSTES
+         ========================================== -->
+    <section id="pane-personas" class="tab-pane">
+
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <span>👥</span>
+          <span>Histórico de personas</span>
+        </h3>
+        <span id="all-people-count-badge" class="brand-badge" style="background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border-color);">0 personas</span>
+      </div>
+
+      <div id="all-people-list" class="loans-list">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <div id="all-people-empty-msg" style="display: none; text-align: center; padding: 24px 10px; color: var(--text-dim); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <div style="font-size: 2rem; margin-bottom: 6px;">👤</div>
+        <div style="font-weight: 700;">Aún no hay personas registradas</div>
+        <div style="font-size: 0.8rem; margin-top: 4px;">Al registrar el primer préstamo se guardará automáticamente en este listado.</div>
+      </div>
+
+      <!-- Copias de Seguridad y Datos -->
+      <div class="card-form" style="margin-top: 10px;">
+        <div class="form-title">
+          <span>💾</span>
+          <span>Copias de Seguridad (Tus Datos)</span>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4;">
+          Tus registros se guardan 100% en la memoria de tu dispositivo de manera privada. Puedes descargar una copia de seguridad o transferir tus datos a otro móvil o PC:
+        </p>
+        <div class="form-row-duo">
+          <button id="btn-export-data" class="picker-nav-btn" style="background: var(--bg-card); border-color: var(--emerald); color: var(--emerald-light); font-weight: 800; padding: 12px;">
+            📥 Descargar Copia (JSON)
+          </button>
+          <button id="btn-import-data" class="picker-nav-btn" style="background: var(--bg-card); border-color: var(--sky); color: var(--sky); font-weight: 800; padding: 12px;">
+            📤 Cargar Copia
+          </button>
+        </div>
+        <input type="file" id="file-input-import" accept=".json" style="display: none;">
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegación Inferior (Móvil) -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" data-tab="diario">
+      <span class="tab-icon">📅</span>
+      <span class="tab-label">Diario</span>
+    </button>
+    <button class="nav-tab" data-tab="mensual">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Mensual</span>
+    </button>
+    <button class="nav-tab" data-tab="personas">
+      <span class="tab-icon">👥</span>
+      <span class="tab-label">Personas</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================
+       MODAL: EDITAR PRÉSTAMO
+       ========================================== -->
+  <div id="modal-edit" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Editar Apunte</h3>
+        <button id="btn-close-edit-modal" class="btn-close-modal">✕</button>
+      </div>
+
+      <form id="form-edit" class="form-grid">
+        <input type="hidden" id="edit-loan-id">
+
+        <div class="form-group">
+          <label class="form-label" for="edit-date">Fecha:</label>
+          <input type="date" id="edit-date" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-person">Persona:</label>
+          <input type="text" id="edit-person" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-concept">Gasto / Motivo:</label>
+          <input type="text" id="edit-concept" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-amount">Valor (€):</label>
+          <input type="number" id="edit-amount" class="form-input" step="0.01" min="0.01" required inputmode="decimal">
+        </div>
+
+        <div class="form-row-duo" style="margin-top: 8px;">
+          <button type="button" id="btn-cancel-edit" class="picker-nav-btn" style="padding: 12px;">Cancelar</button>
+          <button type="submit" class="btn-submit-action" style="margin-top: 0; padding: 12px;">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: DETALLE DE PERSONA
+       ========================================== -->
+  <div id="modal-person" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-person-title" class="modal-title">👤 Carlos Ruiz</h3>
+        <button id="btn-close-person-modal" class="btn-close-modal">✕</button>
+      </div>
+
+      <div id="modal-person-total" style="font-size: 1.1rem; font-weight: 900; color: var(--gold-light);">
+        Total en el mes: 0,00 €
+      </div>
+
+      <div id="modal-person-list" class="loans-list" style="max-height: 280px; overflow-y: auto;">
+        <!-- Apuntes de la persona -->
+      </div>
+
+      <button id="btn-share-person-wa" class="share-whatsapp-btn">
+        <span>📲</span>
+        <span>Enviar cuenta individual por WhatsApp</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notificación Flotante -->
+  <div id="toast-msg" class="toast-msg">Mensaje</div>
+
+  <!-- Scripts -->
+  
+  <script>
+// Motor Lógico de Control de Préstamos y Adelantos (PrestApp)
+// 100% Gratuito, Sin Servidores de Pago, Almacenamiento Local Seguro
+
+const safeStorage = {
+  _mem: {},
+  getItem(key) {
+    try {
+      if (typeof window !== 'undefined' && 'localStorage' in window && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch (e) {}
+    return this._mem[key] || null;
+  },
+  setItem(key, val) {
+    try {
+      if (typeof window !== 'undefined' && 'localStorage' in window && window.localStorage) {
+        window.localStorage.setItem(key, val);
+        return;
+      }
+    } catch (e) {}
+    this._mem[key] = String(val);
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.safeStorage = safeStorage;
+}
+
+class PrestamosManager {
+  constructor() {
+    this.storageKey = 'control_prestamos_data_v1';
+
+    // Lista de préstamos y adelantos registrados
+    this.loans = [];
+
+    // Conceptos rápidos habituales
+    this.defaultConcepts = [
+      'Adelanto',
+      'Gasolina',
+      'Comida',
+      'Reparación',
+      'Material',
+      'Préstamo personal',
+      'Dietas',
+      'Varios'
+    ];
+
+    this.load();
+  }
+
+  save() {
+    try {
+      safeStorage.setItem(this.storageKey, JSON.stringify({
+        loans: this.loans
+      }));
+    } catch (e) {
+      console.warn('Error al guardar datos de préstamos', e);
+    }
+  }
+
+  load() {
+    try {
+      const data = safeStorage.getItem(this.storageKey);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed.loans && Array.isArray(parsed.loans)) {
+          this.loans = parsed.loans;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al cargar datos de préstamos', e);
+    }
+  }
+
+  // --- GESTIÓN DE PRÉSTAMOS (CRUD) ---
+
+  /**
+   * Añadir un nuevo préstamo o adelanto
+   */
+  addLoan(dateStr, personName, concept, amount) {
+    const trimmedPerson = (personName || '').trim();
+    const trimmedConcept = (concept || 'Préstamo').trim();
+    const parsedAmount = parseFloat(amount);
+
+    if (!trimmedPerson) throw new Error('El nombre de la persona es obligatorio');
+    if (isNaN(parsedAmount) || parsedAmount <= 0) throw new Error('El valor debe ser un número mayor a 0');
+
+    const newLoan = {
+      id: Date.now() + Math.random().toString(36).substr(2, 4),
+      date: dateStr || this.getTodayDateString(),
+      person: trimmedPerson,
+      concept: trimmedConcept,
+      amount: parsedAmount,
+      createdAt: new Date().toISOString()
+    };
+
+    this.loans.unshift(newLoan); // El más reciente primero
+    this.save();
+    return newLoan;
+  }
+
+  /**
+   * Editar un préstamo existente
+   */
+  editLoan(id, updatedData) {
+    const item = this.loans.find(x => x.id === id);
+    if (!item) return false;
+
+    if (updatedData.person !== undefined) {
+      const p = (updatedData.person || '').trim();
+      if (p) item.person = p;
+    }
+    if (updatedData.concept !== undefined) {
+      const c = (updatedData.concept || '').trim();
+      if (c) item.concept = c;
+    }
+    if (updatedData.amount !== undefined) {
+      const amt = parseFloat(updatedData.amount);
+      if (!isNaN(amt) && amt > 0) item.amount = amt;
+    }
+    if (updatedData.date !== undefined && updatedData.date) {
+      item.date = updatedData.date;
+    }
+
+    this.save();
+    return true;
+  }
+
+  /**
+   * Eliminar un préstamo
+   */
+  deleteLoan(id) {
+    const index = this.loans.findIndex(x => x.id === id);
+    if (index !== -1) {
+      this.loans.splice(index, 1);
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  getLoanById(id) {
+    return this.loans.find(x => x.id === id) || null;
+  }
+
+  // --- CONSULTAS Y SUMATORIOS DIARIOS ---
+
+  /**
+   * Obtiene todos los préstamos de un día y calcula el sumatorio total
+   */
+  getDailyLoans(dateStr) {
+    const items = this.loans.filter(l => l.date === dateStr);
+    const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      date: dateStr,
+      items,
+      totalAmount,
+      count: items.length
+    };
+  }
+
+  // --- CONSULTAS Y SUMATORIOS MENSUALES ---
+
+  /**
+   * Obtiene el sumatorio del mes y el desglose acumulado por persona
+   * @param {number} year - Ej: 2026
+   * @param {number} month - 1 a 12
+   */
+  getMonthlySummary(year, month) {
+    const padMonth = String(month).padStart(2, '0');
+    const monthPrefix = `${year}-${padMonth}`;
+
+    const items = this.loans.filter(l => l.date.startsWith(monthPrefix));
+    const grandTotal = items.reduce((sum, l) => sum + l.amount, 0);
+
+    // Agrupación por persona
+    const personMap = {};
+    items.forEach(l => {
+      const key = l.person.toLowerCase();
+      if (!personMap[key]) {
+        personMap[key] = {
+          person: l.person,
+          totalAmount: 0,
+          count: 0,
+          items: []
+        };
+      }
+      personMap[key].totalAmount += l.amount;
+      personMap[key].count++;
+      personMap[key].items.push(l);
+    });
+
+    // Ordenar personas de mayor a menor importe prestado
+    const byPerson = Object.values(personMap).sort((a, b) => {
+      if (b.totalAmount !== a.totalAmount) {
+        return b.totalAmount - a.totalAmount;
+      }
+      return a.person.localeCompare(b.person);
+    });
+
+    return {
+      year,
+      month,
+      monthName: this.getMonthName(month),
+      monthPrefix,
+      grandTotal,
+      totalCount: items.length,
+      items,
+      byPerson
+    };
+  }
+
+  /**
+   * Obtiene la lista única de personas registradas hasta la fecha
+   */
+  getAllPeople() {
+    const set = new Set();
+    this.loans.forEach(l => {
+      if (l.person && l.person.trim()) set.add(l.person.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
+  // --- UTILIDADES DE FECHA ---
+
+  getTodayDateString() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  getMonthName(month) {
+    const names = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return names[month - 1] || 'Mes';
+  }
+
+  // --- GENERACIÓN DE INFORMES PARA WHATSAPP ---
+
+  /**
+   * Informe del día para WhatsApp
+   */
+  getDailyWhatsAppText(dateStr) {
+    const data = this.getDailyLoans(dateStr);
+    let text = `📅 *CONTROL DE PRÉSTAMOS - ${dateStr}*\n`;
+    text += `💰 *Total del día:* ${data.totalAmount.toLocaleString('es-ES')} € (${data.count} apuntes)\n\n`;
+
+    if (data.items.length === 0) {
+      text += `_No hay préstamos ni gastos registrados en esta fecha._`;
+      return text;
+    }
+
+    text += `📋 *Detalle del día:*\n`;
+    data.items.forEach((item, i) => {
+      text += `${i + 1}. *${item.person}*: ${item.amount.toLocaleString('es-ES')} € _(${item.concept})_\n`;
+    });
+
+    return text;
+  }
+
+  /**
+   * Informe del mes para WhatsApp
+   */
+  getMonthlyWhatsAppText(year, month) {
+    const data = this.getMonthlySummary(year, month);
+    let text = `📊 *CONTROL DE PRÉSTAMOS Y ADELANTOS*\n`;
+    text += `🗓️ *Mes:* ${data.monthName.toUpperCase()} ${year}\n`;
+    text += `💰 *GRAN TOTAL PRESTADO:* ${data.grandTotal.toLocaleString('es-ES')} € (${data.totalCount} movimientos)\n\n`;
+
+    if (data.byPerson.length === 0) {
+      text += `_No hay movimientos registrados en este mes._`;
+      return text;
+    }
+
+    text += `👥 *TOTAL POR PERSONA:*\n`;
+    data.byPerson.forEach((p, i) => {
+      let medal = `${i + 1}. `;
+      if (i === 0) medal = `🥇 `;
+      else if (i === 1) medal = `🥈 `;
+      else if (i === 2) medal = `🥉 `;
+
+      text += `${medal}*${p.person}*: *${p.totalAmount.toLocaleString('es-ES')} €* (${p.count} ${p.count === 1 ? 'apunte' : 'apuntes'})\n`;
+    });
+
+    return text;
+  }
+
+  /**
+   * Informe individual por persona para WhatsApp
+   */
+  getPersonWhatsAppText(personName, year, month) {
+    const data = this.getMonthlySummary(year, month);
+    const target = data.byPerson.find(p => p.person.toLowerCase() === personName.toLowerCase());
+
+    if (!target) {
+      return `No hay apuntes registrados para ${personName} en ${data.monthName} ${year}.`;
+    }
+
+    let text = `👤 *CUENTA DE PRÉSTAMOS Y GASTOS*\n`;
+    text += `Nombre: *${target.person}*\n`;
+    text += `Mes: ${data.monthName} ${year}\n`;
+    text += `💰 *Total Acumulado:* ${target.totalAmount.toLocaleString('es-ES')} €\n\n`;
+    text += `📋 *Detalle de movimientos:*\n`;
+
+    target.items.forEach((item, i) => {
+      text += `${i + 1}. ${item.date} • *${item.amount.toLocaleString('es-ES')} €* - ${item.concept}\n`;
+    });
+
+    return text;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.prestamosManager = new PrestamosManager();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { PrestamosManager, safeStorage };
+}
+
+
+// Controlador de Interfaz: Control de Préstamos y Adelantos (PrestApp)
+document.addEventListener('DOMContentLoaded', () => {
+  // Estado de la aplicación
+  const state = {
+    activeTab: 'diario',
+    selectedDate: prestamosManager.getTodayDateString(),
+    selectedYear: new Date().getFullYear(),
+    selectedMonth: new Date().getMonth() + 1,
+    editingLoanId: null,
+    viewingPerson: null
+  };
+
+  // Elementos DOM
+  const elements = {
+    // Pestañas
+    navTabs: document.querySelectorAll('.nav-tab'),
+    tabPanes: {
+      diario: document.getElementById('pane-diario'),
+      mensual: document.getElementById('pane-mensual'),
+      personas: document.getElementById('pane-personas')
+    },
+
+    // Formulario de Registro
+    form: document.getElementById('loan-form'),
+    inputPerson: document.getElementById('input-person'),
+    inputConcept: document.getElementById('input-concept'),
+    inputAmount: document.getElementById('input-amount'),
+    inputDate: document.getElementById('input-date'),
+    conceptChips: document.querySelectorAll('.concept-chip'),
+    peopleDatalist: document.getElementById('people-datalist'),
+
+    // Vista Diaria
+    dailyDateTitle: document.getElementById('daily-date-title'),
+    dailyDateSub: document.getElementById('daily-date-sub'),
+    btnPrevDay: document.getElementById('btn-prev-day'),
+    btnNextDay: document.getElementById('btn-next-day'),
+    btnToday: document.getElementById('btn-today'),
+    dailyTotalAmount: document.getElementById('daily-total-amount'),
+    dailyCountSub: document.getElementById('daily-count-sub'),
+    dailyLoansList: document.getElementById('daily-loans-list'),
+    dailyEmptyMsg: document.getElementById('daily-empty-msg'),
+    btnShareDailyWa: document.getElementById('btn-share-daily-wa'),
+
+    // Vista Mensual
+    monthlyTitle: document.getElementById('monthly-title'),
+    monthlySub: document.getElementById('monthly-sub'),
+    btnPrevMonth: document.getElementById('btn-prev-month'),
+    btnNextMonth: document.getElementById('btn-next-month'),
+    btnCurrentMonth: document.getElementById('btn-current-month'),
+    monthlyGrandTotal: document.getElementById('monthly-grand-total'),
+    monthlyCountSub: document.getElementById('monthly-count-sub'),
+    monthlyPeopleList: document.getElementById('monthly-people-list'),
+    monthlyEmptyMsg: document.getElementById('monthly-empty-msg'),
+    btnShareMonthlyWa: document.getElementById('btn-share-monthly-wa'),
+
+    // Vista Personas
+    allPeopleList: document.getElementById('all-people-list'),
+    allPeopleEmptyMsg: document.getElementById('all-people-empty-msg'),
+    allPeopleCountBadge: document.getElementById('all-people-count-badge'),
+
+    // Modal de Edición
+    modalEdit: document.getElementById('modal-edit'),
+    formEdit: document.getElementById('form-edit'),
+    editInputId: document.getElementById('edit-loan-id'),
+    editInputDate: document.getElementById('edit-date'),
+    editInputPerson: document.getElementById('edit-person'),
+    editInputConcept: document.getElementById('edit-concept'),
+    editInputAmount: document.getElementById('edit-amount'),
+    btnCloseEditModal: document.getElementById('btn-close-edit-modal'),
+    btnCancelEdit: document.getElementById('btn-cancel-edit'),
+
+    // Modal de Detalle Persona
+    modalPerson: document.getElementById('modal-person'),
+    modalPersonTitle: document.getElementById('modal-person-title'),
+    modalPersonTotal: document.getElementById('modal-person-total'),
+    modalPersonList: document.getElementById('modal-person-list'),
+    btnSharePersonWa: document.getElementById('btn-share-person-wa'),
+    btnClosePersonModal: document.getElementById('btn-close-person-modal'),
+
+    // Botón Instalar PWA y Backup
+    btnInstallPwa: document.getElementById('btn-install-pwa'),
+    btnExportData: document.getElementById('btn-export-data'),
+    btnImportData: document.getElementById('btn-import-data'),
+    fileInputImport: document.getElementById('file-input-import'),
+
+    // Toast
+    toast: document.getElementById('toast-msg')
+  };
+
+  // Sonidos Sintetizados (Web Audio API - Sin archivos externos, offline 100%)
+  const audioCtx = (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined')
+    ? new (window.AudioContext || window.webkitAudioContext)()
+    : null;
+
+  function playTone(freq = 600, duration = 0.08, type = 'sine') {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function playSuccessSound() {
+    playTone(523.25, 0.06); // Do
+    setTimeout(() => playTone(659.25, 0.09), 60); // Mi
+  }
+
+  function playDeleteSound() {
+    playTone(330, 0.08, 'triangle');
+    setTimeout(() => playTone(220, 0.12, 'triangle'), 70);
+  }
+
+  function vibrate(ms = 35) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(ms); } catch (e) {}
+    }
+  }
+
+  // Notificación Toast
+  let toastTimer = null;
+  function showToast(message) {
+    if (!elements.toast) return;
+    elements.toast.textContent = message;
+    elements.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      elements.toast.classList.remove('show');
+    }, 2800);
+  }
+
+  // Formato de Moneda
+  function formatMoney(amount) {
+    return Number(amount || 0).toLocaleString('es-ES', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' €';
+  }
+
+  // Formato de Fecha Legible
+  function formatDateReadable(dateStr) {
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const d = parseInt(parts[2], 10);
+        const dt = new Date(y, m - 1, d);
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return `${days[dt.getDay()]}, ${d} ${months[m - 1]} ${y}`;
+      }
+    } catch (e) {}
+    return dateStr;
+  }
+
+  // Inicializar Fecha por Defecto en Formulario
+  if (elements.inputDate) {
+    elements.inputDate.value = state.selectedDate;
+  }
+
+  // Actualizar Autocompletado de Personas
+  function updatePeopleDatalist() {
+    if (!elements.peopleDatalist) return;
+    const people = prestamosManager.getAllPeople();
+    elements.peopleDatalist.innerHTML = '';
+    people.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      elements.peopleDatalist.appendChild(opt);
+    });
+  }
+
+  // ==========================================================
+  // RENDERIZADO DE VISTAS
+  // ==========================================================
+
+  // Renderizar Vista Diaria
+  function renderDailyView() {
+    const daily = prestamosManager.getDailyLoans(state.selectedDate);
+
+    // Encabezado selector de fecha
+    if (elements.dailyDateTitle) {
+      elements.dailyDateTitle.textContent = formatDateReadable(state.selectedDate);
+    }
+    const isToday = state.selectedDate === prestamosManager.getTodayDateString();
+    if (elements.dailyDateSub) {
+      elements.dailyDateSub.textContent = isToday ? '📅 Hoy' : 'Fecha seleccionada';
+      elements.dailyDateSub.style.color = isToday ? 'var(--emerald)' : 'var(--sky)';
+    }
+
+    // Totales diarios
+    if (elements.dailyTotalAmount) {
+      elements.dailyTotalAmount.textContent = formatMoney(daily.totalAmount);
+    }
+    if (elements.dailyCountSub) {
+      elements.dailyCountSub.textContent = daily.count === 1
+        ? '1 préstamo o adelanto registrado'
+        : `${daily.count} préstamos o adelantos registrados`;
+    }
+
+    // Lista de préstamos
+    if (!elements.dailyLoansList) return;
+    elements.dailyLoansList.innerHTML = '';
+
+    if (daily.items.length === 0) {
+      if (elements.dailyEmptyMsg) elements.dailyEmptyMsg.style.display = 'block';
+    } else {
+      if (elements.dailyEmptyMsg) elements.dailyEmptyMsg.style.display = 'none';
+
+      daily.items.forEach(loan => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'loan-item-card';
+
+        const initial = loan.person.charAt(0).toUpperCase();
+
+        itemEl.innerHTML = `
+          <div class="loan-item-left">
+            <div class="loan-avatar">${initial}</div>
+            <div class="loan-meta">
+              <span class="loan-person-name">${escapeHtml(loan.person)}</span>
+              <span class="loan-concept-tag">🏷️ ${escapeHtml(loan.concept)}</span>
+            </div>
+          </div>
+          <div class="loan-item-right">
+            <span class="loan-amount-badge">${formatMoney(loan.amount)}</span>
+            <button class="btn-icon-action btn-edit" title="Editar préstamo" data-id="${loan.id}">✏️</button>
+            <button class="btn-icon-action delete btn-delete" title="Eliminar" data-id="${loan.id}">🗑️</button>
+          </div>
+        `;
+
+        // Eventos de edición y borrado
+        const btnEdit = itemEl.querySelector('.btn-edit');
+        btnEdit.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEditModal(loan.id);
+        });
+
+        const btnDel = itemEl.querySelector('.btn-delete');
+        btnDel.addEventListener('click', (e) => {
+          e.stopPropagation();
+          confirmDeleteLoan(loan.id, loan.person, loan.amount);
+        });
+
+        elements.dailyLoansList.appendChild(itemEl);
+      });
+    }
+  }
+
+  // Renderizar Vista Mensual
+  function renderMonthlyView() {
+    const monthly = prestamosManager.getMonthlySummary(state.selectedYear, state.selectedMonth);
+
+    if (elements.monthlyTitle) {
+      elements.monthlyTitle.textContent = `${monthly.monthName} ${state.selectedYear}`;
+    }
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const isCurrent = state.selectedYear === currentYear && state.selectedMonth === currentMonth;
+    if (elements.monthlySub) {
+      elements.monthlySub.textContent = isCurrent ? '🗓️ Mes en curso' : 'Mes consultado';
+      elements.monthlySub.style.color = isCurrent ? 'var(--emerald)' : 'var(--gold)';
+    }
+
+    if (elements.monthlyGrandTotal) {
+      elements.monthlyGrandTotal.textContent = formatMoney(monthly.grandTotal);
+    }
+    if (elements.monthlyCountSub) {
+      elements.monthlyCountSub.textContent = monthly.totalCount === 1
+        ? '1 movimiento total este mes'
+        : `${monthly.totalCount} movimientos totales este mes`;
+    }
+
+    if (!elements.monthlyPeopleList) return;
+    elements.monthlyPeopleList.innerHTML = '';
+
+    if (monthly.byPerson.length === 0) {
+      if (elements.monthlyEmptyMsg) elements.monthlyEmptyMsg.style.display = 'block';
+    } else {
+      if (elements.monthlyEmptyMsg) elements.monthlyEmptyMsg.style.display = 'none';
+
+      const maxPersonAmount = monthly.byPerson[0].totalAmount || 1;
+
+      monthly.byPerson.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'person-monthly-card';
+
+        let medal = `${idx + 1}º`;
+        if (idx === 0) medal = '🥇';
+        else if (idx === 1) medal = '🥈';
+        else if (idx === 2) medal = '🥉';
+
+        const percentage = Math.round((p.totalAmount / maxPersonAmount) * 100);
+        const percentOfTotal = monthly.grandTotal > 0
+          ? Math.round((p.totalAmount / monthly.grandTotal) * 100)
+          : 0;
+
+        card.innerHTML = `
+          <div class="person-monthly-top">
+            <span class="person-monthly-rank">${medal}</span>
+            <span class="person-monthly-name">${escapeHtml(p.person)}</span>
+            <span class="person-monthly-amount">${formatMoney(p.totalAmount)}</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: ${percentage}%"></div>
+          </div>
+          <div class="person-monthly-bottom">
+            <span>${p.count} ${p.count === 1 ? 'apunte' : 'apuntes'} (${percentOfTotal}% del mes)</span>
+            <span style="color: var(--sky); font-weight: 700;">Ver detalle ➔</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          openPersonModal(p.person);
+        });
+
+        elements.monthlyPeopleList.appendChild(card);
+      });
+    }
+  }
+
+  // Renderizar Vista Todas las Personas
+  function renderAllPeopleView() {
+    const people = prestamosManager.getAllPeople();
+
+    if (elements.allPeopleCountBadge) {
+      elements.allPeopleCountBadge.textContent = `${people.length} personas`;
+    }
+
+    if (!elements.allPeopleList) return;
+    elements.allPeopleList.innerHTML = '';
+
+    if (people.length === 0) {
+      if (elements.allPeopleEmptyMsg) elements.allPeopleEmptyMsg.style.display = 'block';
+    } else {
+      if (elements.allPeopleEmptyMsg) elements.allPeopleEmptyMsg.style.display = 'none';
+
+      // Calcular total acumulado histórico por persona
+      const totalsMap = {};
+      prestamosManager.loans.forEach(l => {
+        const key = l.person.toLowerCase();
+        if (!totalsMap[key]) totalsMap[key] = { amount: 0, count: 0 };
+        totalsMap[key].amount += l.amount;
+        totalsMap[key].count++;
+      });
+
+      people.forEach(personName => {
+        const pData = totalsMap[personName.toLowerCase()] || { amount: 0, count: 0 };
+        const initial = personName.charAt(0).toUpperCase();
+
+        const card = document.createElement('div');
+        card.className = 'loan-item-card';
+        card.style.cursor = 'pointer';
+
+        card.innerHTML = `
+          <div class="loan-item-left">
+            <div class="loan-avatar">${initial}</div>
+            <div class="loan-meta">
+              <span class="loan-person-name">${escapeHtml(personName)}</span>
+              <span class="loan-concept-tag">${pData.count} ${pData.count === 1 ? 'movimiento total' : 'movimientos totales'}</span>
+            </div>
+          </div>
+          <div class="loan-item-right">
+            <span class="loan-amount-badge">${formatMoney(pData.amount)}</span>
+            <span style="color: var(--sky); font-size: 1.1rem;">➔</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          openPersonModal(personName);
+        });
+
+        elements.allPeopleList.appendChild(card);
+      });
+    }
+  }
+
+  // Re-renderizar todo
+  function renderAll() {
+    updatePeopleDatalist();
+    renderDailyView();
+    renderMonthlyView();
+    renderAllPeopleView();
+  }
+
+  // ==========================================================
+  // EVENTOS DE NAVEGACIÓN ENTRE PESTAÑAS
+  // ==========================================================
+  elements.navTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.getAttribute('data-tab');
+      if (!targetTab || targetTab === state.activeTab) return;
+
+      vibrate(15);
+      elements.navTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      Object.keys(elements.tabPanes).forEach(paneKey => {
+        if (elements.tabPanes[paneKey]) {
+          elements.tabPanes[paneKey].classList.remove('active');
+        }
+      });
+
+      if (elements.tabPanes[targetTab]) {
+        elements.tabPanes[targetTab].classList.add('active');
+      }
+
+      state.activeTab = targetTab;
+      renderAll();
+    });
+  });
+
+  // ==========================================================
+  // CHIPS DE CONCEPTOS RÁPIDOS
+  // ==========================================================
+  elements.conceptChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const text = chip.getAttribute('data-concept') || chip.textContent.trim();
+      if (elements.inputConcept) {
+        elements.inputConcept.value = text;
+        vibrate(20);
+        playTone(700, 0.05);
+        if (elements.inputAmount) {
+          elements.inputAmount.focus();
+        }
+      }
+    });
+  });
+
+  // ==========================================================
+  // FORMULARIO: REGISTRO DE PRÉSTAMO
+  // ==========================================================
+  if (elements.form) {
+    elements.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const person = elements.inputPerson ? elements.inputPerson.value.trim() : '';
+      const concept = elements.inputConcept ? elements.inputConcept.value.trim() : 'Adelanto';
+      const amountVal = elements.inputAmount ? elements.inputAmount.value : '';
+      const dateVal = (elements.inputDate && elements.inputDate.value)
+        ? elements.inputDate.value
+        : state.selectedDate;
+
+      if (!person) {
+        showToast('⚠️ Introduce el nombre de la persona');
+        if (elements.inputPerson) elements.inputPerson.focus();
+        return;
+      }
+
+      const amountNum = parseFloat(amountVal);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        showToast('⚠️ Introduce un importe válido mayor a 0');
+        if (elements.inputAmount) elements.inputAmount.focus();
+        return;
+      }
+
+      try {
+        prestamosManager.addLoan(dateVal, person, concept, amountNum);
+
+        // Si la fecha guardada es distinta a la seleccionada actualmente, mover la vista a esa fecha
+        state.selectedDate = dateVal;
+        const [y, m] = dateVal.split('-').map(Number);
+        if (y && m) {
+          state.selectedYear = y;
+          state.selectedMonth = m;
+        }
+
+        playSuccessSound();
+        vibrate(40);
+        showToast(`✅ Guardado: ${person} - ${formatMoney(amountNum)}`);
+
+        // Limpiar importe y concepto, mantener foco
+        if (elements.inputAmount) elements.inputAmount.value = '';
+        if (elements.inputConcept) elements.inputConcept.value = '';
+        if (elements.inputPerson) elements.inputPerson.focus();
+
+        renderAll();
+      } catch (err) {
+        showToast(`❌ Error: ${err.message}`);
+      }
+    });
+  }
+
+  // ==========================================================
+  // CONTROL DE FECHAS DIARIAS
+  // ==========================================================
+  function changeDateByOffset(days) {
+    const [y, m, d] = state.selectedDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+
+    const newY = dt.getFullYear();
+    const newM = String(dt.getMonth() + 1).padStart(2, '0');
+    const newD = String(dt.getDate()).padStart(2, '0');
+    state.selectedDate = `${newY}-${newM}-${newD}`;
+
+    if (elements.inputDate) {
+      elements.inputDate.value = state.selectedDate;
+    }
+
+    state.selectedYear = newY;
+    state.selectedMonth = parseInt(newM, 10);
+
+    vibrate(15);
+    renderAll();
+  }
+
+  if (elements.btnPrevDay) {
+    elements.btnPrevDay.addEventListener('click', () => changeDateByOffset(-1));
+  }
+  if (elements.btnNextDay) {
+    elements.btnNextDay.addEventListener('click', () => changeDateByOffset(1));
+  }
+  if (elements.btnToday) {
+    elements.btnToday.addEventListener('click', () => {
+      state.selectedDate = prestamosManager.getTodayDateString();
+      if (elements.inputDate) elements.inputDate.value = state.selectedDate;
+      const [y, m] = state.selectedDate.split('-').map(Number);
+      state.selectedYear = y;
+      state.selectedMonth = m;
+      vibrate(25);
+      renderAll();
+    });
+  }
+
+  // ==========================================================
+  // CONTROL DE MESES
+  // ==========================================================
+  function changeMonthByOffset(offset) {
+    let m = state.selectedMonth + offset;
+    let y = state.selectedYear;
+    if (m < 1) {
+      m = 12;
+      y--;
+    } else if (m > 12) {
+      m = 1;
+      y++;
+    }
+    state.selectedMonth = m;
+    state.selectedYear = y;
+    vibrate(15);
+    renderMonthlyView();
+  }
+
+  if (elements.btnPrevMonth) {
+    elements.btnPrevMonth.addEventListener('click', () => changeMonthByOffset(-1));
+  }
+  if (elements.btnNextMonth) {
+    elements.btnNextMonth.addEventListener('click', () => changeMonthByOffset(1));
+  }
+  if (elements.btnCurrentMonth) {
+    elements.btnCurrentMonth.addEventListener('click', () => {
+      state.selectedYear = new Date().getFullYear();
+      state.selectedMonth = new Date().getMonth() + 1;
+      vibrate(25);
+      renderMonthlyView();
+    });
+  }
+
+  // ==========================================================
+  // MODAL DE EDICIÓN
+  // ==========================================================
+  function openEditModal(loanId) {
+    const loan = prestamosManager.getLoanById(loanId);
+    if (!loan) return;
+
+    state.editingLoanId = loanId;
+    if (elements.editInputId) elements.editInputId.value = loan.id;
+    if (elements.editInputDate) elements.editInputDate.value = loan.date;
+    if (elements.editInputPerson) elements.editInputPerson.value = loan.person;
+    if (elements.editInputConcept) elements.editInputConcept.value = loan.concept;
+    if (elements.editInputAmount) elements.editInputAmount.value = loan.amount;
+
+    if (elements.modalEdit) elements.modalEdit.classList.add('open');
+  }
+
+  function closeEditModal() {
+    state.editingLoanId = null;
+    if (elements.modalEdit) elements.modalEdit.classList.remove('open');
+  }
+
+  if (elements.btnCloseEditModal) elements.btnCloseEditModal.addEventListener('click', closeEditModal);
+  if (elements.btnCancelEdit) elements.btnCancelEdit.addEventListener('click', closeEditModal);
+
+  if (elements.formEdit) {
+    elements.formEdit.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!state.editingLoanId) return;
+
+      const updatedDate = elements.editInputDate.value;
+      const updatedPerson = elements.editInputPerson.value.trim();
+      const updatedConcept = elements.editInputConcept.value.trim();
+      const updatedAmount = parseFloat(elements.editInputAmount.value);
+
+      if (!updatedPerson) {
+        showToast('⚠️ El nombre no puede estar vacío');
+        return;
+      }
+      if (isNaN(updatedAmount) || updatedAmount <= 0) {
+        showToast('⚠️ Introduce un importe válido');
+        return;
+      }
+
+      const ok = prestamosManager.editLoan(state.editingLoanId, {
+        date: updatedDate,
+        person: updatedPerson,
+        concept: updatedConcept,
+        amount: updatedAmount
+      });
+
+      if (ok) {
+        playSuccessSound();
+        showToast('✏️ Préstamo actualizado correctamente');
+        closeEditModal();
+        renderAll();
+      } else {
+        showToast('❌ Error al editar el préstamo');
+      }
+    });
+  }
+
+  // Confirmar y eliminar préstamo
+  function confirmDeleteLoan(id, person, amount) {
+    if (confirm(`¿Eliminar el registro de ${person} por ${formatMoney(amount)}?`)) {
+      prestamosManager.deleteLoan(id);
+      playDeleteSound();
+      vibrate(50);
+      showToast('🗑️ Registro eliminado');
+      renderAll();
+    }
+  }
+
+  // ==========================================================
+  // MODAL DE DETALLE POR PERSONA
+  // ==========================================================
+  function openPersonModal(personName) {
+    state.viewingPerson = personName;
+    const summary = prestamosManager.getMonthlySummary(state.selectedYear, state.selectedMonth);
+    const target = summary.byPerson.find(p => p.person.toLowerCase() === personName.toLowerCase());
+
+    if (elements.modalPersonTitle) {
+      elements.modalPersonTitle.textContent = `👤 ${personName}`;
+    }
+
+    const totalAmt = target ? target.totalAmount : 0;
+    if (elements.modalPersonTotal) {
+      elements.modalPersonTotal.textContent = `Total en ${summary.monthName}: ${formatMoney(totalAmt)}`;
+    }
+
+    if (elements.modalPersonList) {
+      elements.modalPersonList.innerHTML = '';
+      if (!target || target.items.length === 0) {
+        elements.modalPersonList.innerHTML = `<p style="color: var(--text-dim); text-align: center; padding: 20px 0;">No hay movimientos este mes.</p>`;
+      } else {
+        target.items.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'loan-item-card';
+          row.style.background = 'var(--bg-elevated)';
+          row.innerHTML = `
+            <div class="loan-item-left">
+              <div class="loan-meta">
+                <span class="loan-person-name" style="font-size: 0.88rem;">📅 ${item.date}</span>
+                <span class="loan-concept-tag">${escapeHtml(item.concept)}</span>
+              </div>
+            </div>
+            <div class="loan-item-right">
+              <span class="loan-amount-badge" style="font-size: 1rem;">${formatMoney(item.amount)}</span>
+            </div>
+          `;
+          elements.modalPersonList.appendChild(row);
+        });
+      }
+    }
+
+    if (elements.modalPerson) elements.modalPerson.classList.add('open');
+  }
+
+  function closePersonModal() {
+    state.viewingPerson = null;
+    if (elements.modalPerson) elements.modalPerson.classList.remove('open');
+  }
+
+  if (elements.btnClosePersonModal) elements.btnClosePersonModal.addEventListener('click', closePersonModal);
+
+  // Cerrar modales al hacer clic fuera
+  window.addEventListener('click', (e) => {
+    if (e.target === elements.modalEdit) closeEditModal();
+    if (e.target === elements.modalPerson) closePersonModal();
+  });
+
+  // ==========================================================
+  // COMPARTIR POR WHATSAPP
+  // ==========================================================
+  function shareViaWhatsApp(text) {
+    vibrate(25);
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  }
+
+  if (elements.btnShareDailyWa) {
+    elements.btnShareDailyWa.addEventListener('click', () => {
+      const text = prestamosManager.getDailyWhatsAppText(state.selectedDate);
+      shareViaWhatsApp(text);
+    });
+  }
+
+  if (elements.btnShareMonthlyWa) {
+    elements.btnShareMonthlyWa.addEventListener('click', () => {
+      const text = prestamosManager.getMonthlyWhatsAppText(state.selectedYear, state.selectedMonth);
+      shareViaWhatsApp(text);
+    });
+  }
+
+  if (elements.btnSharePersonWa) {
+    elements.btnSharePersonWa.addEventListener('click', () => {
+      if (!state.viewingPerson) return;
+      const text = prestamosManager.getPersonWhatsAppText(state.viewingPerson, state.selectedYear, state.selectedMonth);
+      shareViaWhatsApp(text);
+    });
+  }
+
+  // ==========================================================
+  // COPIAS DE SEGURIDAD (EXPORTAR E IMPORTAR JSON)
+  // ==========================================================
+  if (elements.btnExportData) {
+    elements.btnExportData.addEventListener('click', () => {
+      const exportObj = {
+        app: 'ControlDePrestamosYAdelantos',
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        loans: prestamosManager.loans
+      };
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `copia_seguridad_prestamos_${prestamosManager.getTodayDateString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 Copia de seguridad descargada');
+    });
+  }
+
+  if (elements.btnImportData && elements.fileInputImport) {
+    elements.btnImportData.addEventListener('click', () => {
+      elements.fileInputImport.click();
+    });
+
+    elements.fileInputImport.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed && Array.isArray(parsed.loans)) {
+            prestamosManager.loans = parsed.loans;
+            prestamosManager.save();
+            renderAll();
+            showToast(`✅ Se importaron ${parsed.loans.length} registros con éxito`);
+          } else {
+            showToast('⚠️ El archivo no contiene datos de préstamos válidos');
+          }
+        } catch (err) {
+          showToast('❌ Error al procesar el archivo JSON');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  // ==========================================================
+  // INSTALACIÓN PWA (ANDROID & PC)
+  // ==========================================================
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (elements.btnInstallPwa) {
+      elements.btnInstallPwa.style.display = 'inline-flex';
+    }
+  });
+
+  if (elements.btnInstallPwa) {
+    elements.btnInstallPwa.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('📲 ¡Aplicación instalada!');
+        }
+        deferredPrompt = null;
+        elements.btnInstallPwa.style.display = 'none';
+      } else {
+        alert('Para instalar en iPhone/iPad:\nToca el botón de Compartir en Safari (icono de cuadrado con flecha hacia arriba) y selecciona "Añadir a pantalla de inicio".\n\nEn Android/Chrome:\nToca en el menú de 3 puntos arriba a la derecha y selecciona "Instalar aplicación".');
+      }
+    });
+  }
+
+  // Registrar Service Worker para soporte Offline
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('ServiceWorker registrado correctamente'))
+      .catch(err => console.log('Error registrando ServiceWorker:', err));
+  }
+
+  // Escapar HTML auxiliar
+  function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, m => map[m]);
+  }
+
+  // Render inicial
+  renderAll();
+});
+
+</script>
+</body>
+</html>
